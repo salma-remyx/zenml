@@ -155,6 +155,7 @@ from zenml.models import (
     ResourceDescriptorFilter,
     ResourceDescriptorRequest,
     ResourceDescriptorResponse,
+    ResourceDescriptorUnit,
     ResourceDescriptorUpdate,
     ResourcePolicyFilter,
     ResourcePolicyGrant,
@@ -2277,6 +2278,7 @@ class Client(metaclass=ClientMetaClass):
         name: str,
         kind: str,
         attributes: Optional[Dict[str, Any]] = None,
+        units: Optional[List[ResourceDescriptorUnit]] = None,
     ) -> ResourceDescriptorResponse:
         """Create a resource descriptor.
 
@@ -2284,6 +2286,7 @@ class Client(metaclass=ClientMetaClass):
             name: The descriptor name.
             kind: The descriptor kind.
             attributes: Descriptor attributes.
+            units: Descriptor unit catalog.
 
         Returns:
             The created descriptor.
@@ -2292,6 +2295,7 @@ class Client(metaclass=ClientMetaClass):
             name=name,
             kind=kind,
             attributes=attributes or {},
+            units=units or [],
         )
         return self.zen_store.create_resource_descriptor(request)
 
@@ -2350,6 +2354,7 @@ class Client(metaclass=ClientMetaClass):
         name: Optional[str] = None,
         kind: Optional[str] = None,
         attributes: Optional[Dict[str, Any]] = None,
+        units: Optional[List[ResourceDescriptorUnit]] = None,
     ) -> ResourceDescriptorResponse:
         """Update a resource descriptor.
 
@@ -2358,6 +2363,7 @@ class Client(metaclass=ClientMetaClass):
             name: The new descriptor name.
             kind: The new descriptor kind.
             attributes: Replacement descriptor attributes.
+            units: Replacement descriptor unit catalog.
 
         Returns:
             The updated descriptor.
@@ -2366,6 +2372,7 @@ class Client(metaclass=ClientMetaClass):
             name=name,
             kind=kind,
             attributes=attributes,
+            units=units,
         )
         return self.zen_store.update_resource_descriptor(descriptor_id, update)
 

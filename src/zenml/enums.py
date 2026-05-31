@@ -646,6 +646,7 @@ class ResourceRequestStatus(StrEnum):
     REJECTED = "rejected"
     RELEASED = "released"
     EXPIRED = "expired"
+    NO_MATCHING_POLICY = "no_matching_policy"
 
 
 class ResourceRequestReclaimTolerance(StrEnum):

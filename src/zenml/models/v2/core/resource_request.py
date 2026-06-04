@@ -156,6 +156,14 @@ class ResourceRequestTerminateRequest(BaseZenModel):
     )
 
 
+class ResourceRequestRenewalRequest(BaseZenModel):
+    """Request model for renewing a resource request lease."""
+
+    lease_expires_at: datetime = Field(
+        title="The renewed lease expiration timestamp.",
+    )
+
+
 class ResourceRequestResponseBody(UserScopedResponseBody):
     """Response body for resource requests."""
 

@@ -84,6 +84,7 @@ if TYPE_CHECKING:
     from zenml.models import (
         PipelineRunResponse,
         PipelineSnapshotResponse,
+        ResourceRequestResponse,
         StepRunResponse,
     )
     from zenml.stack import Stack
@@ -596,7 +597,10 @@ class AzureMLOrchestrator(ContainerizedOrchestrator):
         )
 
     def submit_isolated_step(
-        self, step_run_info: "StepRunInfo", environment: Dict[str, str]
+        self,
+        step_run_info: "StepRunInfo",
+        environment: Dict[str, str],
+        allocated_resource_request: Optional["ResourceRequestResponse"] = None,
     ) -> None:
         """Submits an isolated step to AzureML.
 
@@ -604,6 +608,8 @@ class AzureMLOrchestrator(ContainerizedOrchestrator):
             step_run_info: The step run information.
             environment: The environment variables to set in the execution
                 environment.
+            allocated_resource_request: The allocated resource request for the
+                step, if any.
         """
         logger.info(
             "Launching job for step `%s`.",

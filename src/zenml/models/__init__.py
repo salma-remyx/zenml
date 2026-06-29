@@ -260,6 +260,7 @@ from zenml.models.v2.core.resource_request import (
     ResourceRequestResponseBody,
     ResourceRequestResponseMetadata,
     ResourceRequestResponseResources,
+    ResourceRequestServiceConnectorSettings,
 )
 from zenml.models.v2.core.run_metadata import (
     RunMetadataRequest,
@@ -799,6 +800,7 @@ __all__ = [
     "ResourceRequestResponseBody",
     "ResourceRequestResponseMetadata",
     "ResourceRequestResponseResources",
+    "ResourceRequestServiceConnectorSettings",
     "RunTemplateRequest",
     "RunTemplateUpdate",
     "RunTemplateResponse",

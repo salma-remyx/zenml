@@ -60,6 +60,7 @@ from zenml.enums import (
     ExecutionMode,
     ExecutionStatus,
     GroupType,
+    ResourceRequestStatus,
     RunWaitConditionLeaseMode,
     RunWaitConditionResolution,
     RunWaitConditionStatus,
@@ -338,12 +339,12 @@ class DynamicPipelineRunner:
         self._executor = ThreadPoolExecutor(max_workers=worker_count)
 
         stack = Stack.from_model(snapshot.stack)
+        self._stack = stack
         if orchestrator:
             self._orchestrator = orchestrator
         else:
             self._orchestrator = stack.orchestrator
 
-        self._step_operator = stack.step_operator
         self._invocation_id_lock = threading.Lock()
         self._invocation_ids: Set[str] = set()
 
@@ -748,8 +749,27 @@ class DynamicPipelineRunner:
             The status of the step run.
         """
         if step_run.config.step_operator:
-            assert self._step_operator
-            return self._step_operator.get_status(step_run)
+            resource_request = step_run.resource_request
+            if (
+                resource_request
+                and resource_request.status == ResourceRequestStatus.PENDING
+            ):
+                resource_request = Client().zen_store.get_resource_request(
+                    resource_request.id
+                )
+                if resource_request.status == ResourceRequestStatus.PENDING:
+                    # The resource request is still pending, so we don't really
+                    # know which step operator is responsible for the step run
+                    # yet.
+                    return step_run.status
+            step_operator_name = None
+            if isinstance(step_run.config.step_operator, str):
+                step_operator_name = step_run.config.step_operator
+            step_operator = self._stack.get_step_operator(
+                name=step_operator_name,
+                allocated_resource_request=resource_request,
+            )
+            return step_operator.get_status(step_run)
         else:
             return self._orchestrator.get_isolated_step_status(step_run)
 
@@ -1716,8 +1736,27 @@ class DynamicPipelineRunner:
             step_run: The step run to stop.
         """
         if step_run.config.step_operator:
-            assert self._step_operator
-            self._step_operator.cancel(step_run)
+            resource_request = step_run.resource_request
+            if (
+                resource_request
+                and resource_request.status == ResourceRequestStatus.PENDING
+            ):
+                resource_request = Client().zen_store.get_resource_request(
+                    resource_request.id
+                )
+                if resource_request.status == ResourceRequestStatus.PENDING:
+                    # The resource request is still pending, so we don't really
+                    # know which step operator is responsible for the step run
+                    # yet.
+                    return
+            step_operator_name = None
+            if isinstance(step_run.config.step_operator, str):
+                step_operator_name = step_run.config.step_operator
+            step_operator = self._stack.get_step_operator(
+                name=step_operator_name,
+                allocated_resource_request=resource_request,
+            )
+            step_operator.cancel(step_run)
         else:
             self._orchestrator.stop_isolated_step(step_run)
 

@@ -462,23 +462,9 @@ class StepLauncher:
                 `submit(...)` or `launch(...)` methods.
             BaseException: If the step run failed.
         """  # noqa: DOC502, DOC503
-        service_connector_settings = (
-            allocated_resource_request.get_resources().service_connector_settings
-            if allocated_resource_request
-            else None
-        )
         step_operator = self._stack.get_step_operator(
             name=step_operator_name,
-            service_connector_id=(
-                service_connector_settings.service_connector_id
-                if service_connector_settings
-                else None
-            ),
-            service_connector_resource_id=(
-                service_connector_settings.resource_id
-                if service_connector_settings
-                else None
-            ),
+            allocated_resource_request=allocated_resource_request,
         )
 
         entrypoint_cfg_class = step_operator.entrypoint_config_class

@@ -41,6 +41,42 @@ jobs:
           token="$(curl -sf -X POST             -H "Authorization: Bearer ${{ secrets.REMYX_API_KEY }}"             -H "Content-Type: application/json"             -d "{\"repo\": \"${{ github.repository }}\"}"             "https://engine.remyx.ai/api/v1.0/github/installation-token"             | python3 -c "import sys, json; print(json.load(sys.stdin).get('token', ''))")" || token=""
           echo "::add-mask::$token"
           echo "token=$token" >> "$GITHUB_OUTPUT"
+      # Attach cocoindex-code as a Claude Code skill so the Outrider agent
+      # can ground-truth call-site claims via AST-based semantic code search
+      # instead of speculating from paper metadata. Recommended default;
+      # pass --no-cocoindex to `remyxai outrider setup-local` to omit.
+      - name: Install cocoindex-code as a Claude Code skill
+        run: |
+          git clone --depth 1 https://github.com/cocoindex-io/cocoindex-code /tmp/cocoindex-code
+          pipx install 'cocoindex-code[full]'
+          mkdir -p ~/.claude/skills/
+          ln -sfn /tmp/cocoindex-code ~/.claude/skills/cocoindex-code
+      - name: Write ENVIRONMENTS.md for Outrider
+        run: |
+          cat > "$GITHUB_WORKSPACE/ENVIRONMENTS.md" <<'EOF'
+          ---
+          type: Workflow Environment
+          title: cocoindex-code AST search available
+          description: cocoindex-code AST-based semantic code search is pre-installed as a Claude Code skill.
+          resource: https://github.com/cocoindex-io/cocoindex-code
+          tags: [outrider, environment, cocoindex-code, ast-search]
+          ---
+
+          # Environment: cocoindex-code AST search
+
+          ## Available tools
+
+          - **`ccc` CLI** (AST-based semantic code search across the cloned repo).
+            Prefer over reading entire large files when locating functions,
+            classes, or specific code patterns. Multi-language via tree-sitter.
+
+          ## Suggested use during implementation
+
+          - For "find the function that does X" queries, invoke the semantic-search
+            skill rather than Read/Grep on speculation.
+          - For files > 500 LOC where you only need one function, prefer AST search
+            + targeted Read over reading the whole file.
+          EOF
       - uses: remyxai/outrider@v1
         with:
           interest-id: 34ab4f26-32fd-4557-bcef-c317a85c694a
